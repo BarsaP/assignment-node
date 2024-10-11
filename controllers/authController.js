@@ -4,9 +4,9 @@ import jwt from 'jsonwebtoken';
 import { validationResult } from 'express-validator';
 import dotenv from 'dotenv';
 
-dotenv.config(); // Load environment variables from .env
+dotenv.config(); 
 
-// Register new user or admin
+// Register new user 
 export const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -38,7 +38,7 @@ export const register = async (req, res) => {
   }
 };
 
-// Login and get JWT token
+// Get JWT token
 export const login = async (req, res) => {
   const { username, password } = req.body;
 
@@ -47,11 +47,10 @@ export const login = async (req, res) => {
     let user = await User.findOne({ username });
     if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
 
-    // Compare the provided password with the hashed password in the database
+    // Compare the password with database
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
 
-    // Create a JWT token with the user's ID and role
     const payload = { userId: user._id, role: user.role };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '10h' });
 

@@ -14,7 +14,7 @@ export const uploadAssignment = async (req, res) => {
   }
 };
 
-// Get assignments for admin
+// View assignments tagged to the admin.
 export const getAssignmentsForAdmin = async (req, res) => {
   try {
     const assignments = await Assignment.find({ adminId: req.user.userId });
@@ -25,7 +25,7 @@ export const getAssignmentsForAdmin = async (req, res) => {
   }
 };
 
-// Accept assignment
+// Accept an assignment
 export const acceptAssignment = async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id);
@@ -41,7 +41,7 @@ export const acceptAssignment = async (req, res) => {
   }
 };
 
-// Reject assignment
+// Reject an assignment
 export const rejectAssignment = async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id);

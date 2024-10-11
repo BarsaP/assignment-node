@@ -4,7 +4,7 @@ import { body } from 'express-validator';
 
 const router = express.Router();
 
-// Register route with validation
+// Register a new user with validation
 router.post('/register', [
   body('username').notEmpty().withMessage('Username is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
