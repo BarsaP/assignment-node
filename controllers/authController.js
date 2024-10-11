@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 
 dotenv.config(); 
 
-// Register new user 
+// Register new user or admin and automatically generate JWT
 export const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -31,33 +31,59 @@ export const register = async (req, res) => {
 
     // Save the user to the database
     await user.save();
-    res.json({ msg: 'User registered successfully' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
+
+// Generate a JWT token
+const payload = { userId: user._id, role: user.role };
+const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '10h' });
+
+// Send the token and success message
+res.json({ msg: 'User registered successfully', token });
+} catch (err) {
+console.error(err.message);
+res.status(500).send('Server error');
+}
 };
 
-// Get JWT token
+// Login and get JWT token
 export const login = async (req, res) => {
-  const { username, password } = req.body;
+const { username, password } = req.body;
 
-  try {
-    // Find the user by username
-    let user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
+try {
+// Find the user by username
+let user = await User.findOne({ username });
+if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
 
-    // Compare the password with database
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+// Compare the provided password with the hashed password in the database
+const isMatch = await bcrypt.compare(password, user.password);
+if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
 
-    const payload = { userId: user._id, role: user.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '10h' });
+// Create a JWT token with the user's ID and role
+const payload = { userId: user._id, role: user.role };
+const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '10h' });
 
-    // Return the token
-    res.json({ token });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
+// Return the token
+res.json({ token });
+} catch (err) {
+console.error(err.message);
+res.status(500).send('Server error');
+}
+};
+
+export const getAllAdminUsernames = async (req, res) => {
+try {
+// Find all users with the role of 'ADMIN' and select only the 'username' field
+const admins = await User.find({ role: 'ADMIN' }).select('username');
+
+if (!admins || admins.length === 0) {
+  return res.status(404).json({ msg: 'No admins found' });
+}
+
+// Map the result to extract just the usernames
+const adminUsernames = admins.map(admin => admin.username);
+
+res.json({ admins: adminUsernames });
+} catch (err) {
+console.error(err.message);
+res.status(500).send('Server error');
+}
 };
